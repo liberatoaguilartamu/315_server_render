@@ -23,10 +23,12 @@ process.on('SIGINT', function() {
 app.set("view engine", "ejs");
 
 app.get('/', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     res.send('Hello World!');
 });
 
 app.get('/items', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query('SELECT * FROM items;')
@@ -45,6 +47,7 @@ app.get('/items', (req, res) => {
 
 // Get orderid
 app.get('/orderid', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query('SELECT order_id from orders ORDER BY order_id DESC LIMIT 1;')
@@ -61,6 +64,7 @@ app.get('/orderid', (req, res) => {
 
 // Get item uuid
 app.get('/itemuuid', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query("SELECT uuid from order_items ORDER BY uuid DESC LIMIT 1;")
@@ -77,6 +81,7 @@ app.get('/itemuuid', (req, res) => {
 
 // Get topping uuid
 app.get('/toppinguuid', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query("SELECT uuid from order_toppings ORDER BY uuid DESC LIMIT 1;")
@@ -93,6 +98,7 @@ app.get('/toppinguuid', (req, res) => {
 
 // Get item quantity
 app.get('/quantity', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`SELECT item_quantity from inventory WHERE item_id=${req.query.id}`.replace(/:/g, ""))
@@ -109,6 +115,7 @@ app.get('/quantity', (req, res) => {
 
 // Get id from name
 app.get('/itemid', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`SELECT id FROM items WHERE name='${req.query.name}'`.replace(/:/g, ""))
@@ -125,6 +132,7 @@ app.get('/itemid', (req, res) => {
 
 // Insert order table
 app.get('/createorder', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`INSERT INTO orders VALUES (${req.query.orderID},${req.query.calories},${req.query.total},${req.query.tip},${req.query.total_after_tip},'${req.query.date}');`.replace(/:/g, ""))
@@ -141,6 +149,7 @@ app.get('/createorder', (req, res) => {
 
 // Update inventory after order
 app.get('/updateinventoryserver', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`UPDATE inventory SET item_quantity=GREATEST(item_quantity-1,0) WHERE item_id=(${req.query.itemid});UPDATE inventory SET num_sold=num_sold+1 WHERE item_id=(${req.query.itemid});`.replace(/:/g, ""))
@@ -157,6 +166,7 @@ app.get('/updateinventoryserver', (req, res) => {
 
 // Insert into order items
 app.get('/insertitem', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`INSERT INTO order_items VALUES (${req.query.uuid},${req.query.orderid},${req.query.subitem},${req.query.id},'${req.query.name}');`.replace(/:/g, ""))
@@ -173,6 +183,7 @@ app.get('/insertitem', (req, res) => {
 
 // Insert into order toppings
 app.get('/inserttopping', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`INSERT INTO order_toppings VALUES (${req.query.uuid},${req.query.orderid},${req.query.subitem},${req.query.id},'${req.query.name}');`.replace(/:/g, ""))
@@ -191,6 +202,7 @@ app.get('/inserttopping', (req, res) => {
 
 // Get inventory
 app.get('/inventory', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
 pool
 .query("SELECT inventory.id, inventory.item_id, inventory.name, items.category, items.price, inventory.item_quantity, inventory.num_sold, inventory.vendor, inventory.purchase_price, inventory.batch_quantity FROM inventory JOIN items on items.id = inventory.item_id order by inventory.item_id;")
@@ -207,6 +219,7 @@ pool
 
 // Update inventory
 app.get('/updateinventory', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`UPDATE inventory SET name = '${req.query.name}' WHERE item_id = ${req.query.itemid}`.replace(/:/g, ""))
@@ -223,6 +236,7 @@ app.get('/updateinventory', (req, res) => {
 
 // Update items
 app.get('/updateitem', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`UPDATE items SET name = '${req.query.name}', price = ${req.query.price} WHERE id = ${req.query.itemid}`.replace(/:/g, ""))
@@ -239,6 +253,7 @@ app.get('/updateitem', (req, res) => {
 
 // Add items
 app.get('/additem', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`INSERT INTO items (id,name,category,price,calories) VALUES (${req.query.itemid},'${req.query.name}','${req.query.category}',${req.query.price},${req.query.calories})`.replace(/:/g, ""))
@@ -255,10 +270,11 @@ app.get('/additem', (req, res) => {
 
 // Add inventory
 app.get('/addinventory', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     console.log(req.query);
     pool
-    .query(`INSERT INTO inventory VALUES (${req.query.id},${req.query.itemid},'${req.query.name}',${req.query.quantity},${req.query.num_sold},'${req.query.vendor}',${req.query.purchase_price},${req.query.batch_quantity});`.replace(/:/g, ""))
+    .query(`INSERT INTO inventory (id,item_id,name,item_quantity,num_sold,vendor,purchase_price,batch_quantity) VALUES (${req.query.id},${req.query.itemid},'${req.query.name}',${req.query.quantity},${req.query.num_sold},'${req.query.vendor}',${req.query.purchase_price},${req.query.batch_quantity})`.replace(/:/g, ""))
     .then(query_res => {
         for (let i = 0; i < query_res.rowCount; i++){
             items.push(query_res.rows[i]);
@@ -271,7 +287,8 @@ app.get('/addinventory', (req, res) => {
 });
 
 // Delete item
-app.get('/deleteitem', (req, res) => {
+app.get('/deleteinventory', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`DELETE FROM inventory where item_id = ${req.query.itemid}`.replace(/:/g, ""))
@@ -287,7 +304,8 @@ app.get('/deleteitem', (req, res) => {
 });
 
 // Delete inventory
-app.get('/deleteinventory', (req, res) => {
+app.get('/deleteitem', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`DELETE FROM items where id = ${req.query.itemid}`.replace(/:/g, ""))
@@ -306,6 +324,7 @@ app.get('/deleteinventory', (req, res) => {
 
 // Count item
 app.get('/countitem', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`SELECT COUNT(order_items.uuid) from orders INNER JOIN order_items on orders.order_id = order_items.order_id WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' AND order_items.item_id = ${req.query.itemuuid};`.replace(/:/g, ""))
@@ -322,6 +341,7 @@ app.get('/countitem', (req, res) => {
 
 //Count topping
 app.get('/counttopping', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`SELECT COUNT(order_toppings.uuid) from orders INNER JOIN order_toppings on orders.order_id = order_toppings.order_id WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' AND order_toppings.item_id = ${req.query.topping};`.replace(/:/g, ""))
@@ -340,6 +360,7 @@ app.get('/counttopping', (req, res) => {
 
 // Get item from category
 app.get('/getcategory', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`SELECT * FROM items WHERE category='${req.query.category}' ORDER BY id`.replace(/:/g, ""))
@@ -356,6 +377,7 @@ app.get('/getcategory', (req, res) => {
 
 // Get prices
 app.get('/getprice', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
         items = []
     pool
     .query("SELECT name, price FROM items")
@@ -374,6 +396,7 @@ app.get('/getprice', (req, res) => {
 
 // Get mainEntrees
 app.get('/getmainentrees', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
 pool
 .query("SELECT * FROM items WHERE category='mainEntree' ORDER BY id ;")
@@ -390,6 +413,7 @@ pool
 
 // Get allItems
 app.get('/getitems', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
 pool
 .query("SELECT * FROM items WHERE category='mainEntree' or category='subEntree' ORDER BY id;")
@@ -406,6 +430,7 @@ pool
 
 // Get toppings
 app.get('/toppings', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
 pool
 .query("SELECT * FROM items WHERE category='topping' or category='mainProtein' or category='subProtein' ORDER BY id;")
@@ -422,6 +447,7 @@ pool
 
 // Get order item between dates
 app.get('/getorderitemdate', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`SELECT COUNT(order_items.uuid) from orders INNER JOIN order_items on orders.order_id = order_items.order_id WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' AND order_items.entree_name = '${req.query.entreename}';`.replace(/:/g, ""))
@@ -438,6 +464,7 @@ app.get('/getorderitemdate', (req, res) => {
 
 // Get order topping between dates
 app.get('/getordertoppingdate', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`SELECT COUNT(order_toppings.uuid) from orders INNER JOIN order_items ON orders.order_id = order_items.order_id INNER JOIN order_toppings ON orders.order_id = order_toppings.order_id AND order_items.order_subitem = order_toppings.order_subitem WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' AND order_toppings.topping_name = '${req.query.toppingname}';`.replace(/:/g, ""))
@@ -454,6 +481,7 @@ app.get('/getordertoppingdate', (req, res) => {
 
 // Get bigboy count
 app.get('/bigboycount', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`SELECT COUNT(order_toppings.uuid) from orders INNER JOIN order_items ON orders.order_id = order_items.order_id INNER JOIN order_toppings ON orders.order_id = order_toppings.order_id AND order_items.order_subitem = order_toppings.order_subitem WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' AND order_items.entree_name = '${req.query.entreename}' AND order_toppings.topping_name = '${req.query.toppingname}';`.replace(/:/g, ""))
@@ -470,6 +498,7 @@ app.get('/bigboycount', (req, res) => {
 
 // Get bigboy
 app.get('/bigboy', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
     items = []
     pool
     .query(`SELECT * from orders INNER JOIN order_items ON orders.order_id = order_items.order_id INNER JOIN order_toppings ON orders.order_id = order_toppings.order_id AND order_items.order_subitem = order_toppings.order_subitem WHERE datetime BETWEEN '${req.query.from}' AND '${req.query.to}';`.replace(/:/g, ""))
