@@ -513,11 +513,131 @@ app.get('/bigboy', (req, res) => {
     });
 });
 
+//REVISED QUERIES FOR MANAGER REPORTS
+
+app.get('/getsalesreport', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    items = []
+    pool
+    .query(`SELECT name, price, 
+    (CASE WHEN category='mainEntree' OR category='subEntree' 
+    THEN (SELECT COUNT(order_items.uuid) from orders INNER JOIN order_items on orders.order_id = order_items.order_id WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' AND order_items.entree_name = name) 
+    ELSE (SELECT COUNT(order_toppings.uuid) from orders INNER JOIN order_toppings on orders.order_id = order_toppings.order_id WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' AND order_toppings.topping_name = name) END) as num_sold, 
+    ROUND(CAST((((CASE WHEN category='mainEntree' OR category='subEntree' 
+    THEN (SELECT COUNT(order_items.uuid) from orders INNER JOIN order_items on orders.order_id = order_items.order_id WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' AND order_items.entree_name = name) 
+    ELSE (SELECT COUNT(order_toppings.uuid) from orders INNER JOIN order_toppings on orders.order_id = order_toppings.order_id WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' AND order_toppings.topping_name = name) END))*price) as numeric), 2) as revenue from items ORDER BY revenue DESC;`.replace(/:/g, ""))
+    .then(query_res => {
+        for (let i = 0; i < query_res.rowCount; i++){
+            items.push(query_res.rows[i]);
+        }
+        const data = {items: items};
+        console.log(items);
+        res.send(data);
+        return;
+    });
+});
+
+app.get('/getrestockreport', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    items = []
+    pool
+    .query(`SELECT name, 
+    (CASE WHEN category='mainEntree' OR category='subEntree' 
+    THEN (SELECT COUNT(order_items.uuid) from orders INNER JOIN order_items on orders.order_id = order_items.order_id WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' AND order_items.entree_name = name) 
+    ELSE (SELECT COUNT(order_toppings.uuid) from orders INNER JOIN order_toppings on orders.order_id = order_toppings.order_id WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' AND order_toppings.topping_name = name) END) as num_sold,
+    (SELECT item_quantity from inventory WHERE inventory.item_id=items.id) as item_quantity from items where 
+    ((CASE WHEN category='mainEntree' OR category='subEntree' 
+    THEN (SELECT COUNT(order_items.uuid) from orders INNER JOIN order_items on orders.order_id = order_items.order_id WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' AND order_items.entree_name = name) 
+    ELSE (SELECT COUNT(order_toppings.uuid) from orders INNER JOIN order_toppings on orders.order_id = order_toppings.order_id WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' AND order_toppings.topping_name = name) END)) > (SELECT item_quantity from inventory WHERE inventory.id=items.id) AND not starts_with(items.name,'Extra');`.replace(/:/g, ""))
+    .then(query_res => {
+        for (let i = 0; i < query_res.rowCount; i++){
+            items.push(query_res.rows[i]);
+        }
+        const data = {items: items};
+        console.log(items);
+        res.send(data);
+        return;
+    });
+});
+
+app.get('/getexcessreport', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    items = []
+    pool
+    .query(`SELECT name,
+    (CASE WHEN category='mainEntree' OR category='subEntree' 
+   THEN (SELECT COUNT(order_items.uuid) from orders INNER JOIN order_items on orders.order_id = order_items.order_id WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' AND order_items.entree_name = name) 
+   ELSE (SELECT COUNT(order_toppings.uuid) from orders INNER JOIN order_toppings on orders.order_id = order_toppings.order_id WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' AND order_toppings.topping_name = name) END) as num_sold, 
+   (SELECT item_quantity from inventory WHERE inventory.item_id=items.id) as item_quantity from items where 
+   ((CASE WHEN category='mainEntree' OR category='subEntree' 
+   THEN (SELECT COUNT(order_items.uuid) from orders INNER JOIN order_items on orders.order_id = order_items.order_id WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' AND order_items.entree_name = name) 
+   ELSE (SELECT COUNT(order_toppings.uuid) from orders INNER JOIN order_toppings on orders.order_id = order_toppings.order_id WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' AND order_toppings.topping_name = name) END)) < 0.1*(SELECT item_quantity from inventory WHERE inventory.id=items.id) AND not starts_with(items.name,'Extra');`.replace(/:/g, ""))
+    .then(query_res => {
+        for (let i = 0; i < query_res.rowCount; i++){
+            items.push(query_res.rows[i]);
+        }
+        const data = {items: items};
+        console.log(items);
+        res.send(data);
+        return;
+    });
+});
+
+
+app.get('/getpairstogether', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    items = []
+    pool
+    .query(`SELECT entree_name, topping_name, COUNT(*) AS count FROM (SELECT entree_name, topping_name, datetime from orders INNER JOIN order_items ON orders.order_id = order_items.order_id INNER JOIN order_toppings ON orders.order_id = order_toppings.order_id AND order_items.order_subitem = order_toppings.order_subitem) as big WHERE datetime BETWEEN '${req.query.from}' and '${req.query.to}' GROUP BY entree_name, topping_name ORDER BY count DESC;`)
+    .then(query_res => {
+        for (let i = 0; i < query_res.rowCount; i++){
+            items.push(query_res.rows[i]);
+        }
+        const data = {items: items};
+        console.log(items);
+        res.send(data);
+        return;
+    });
+});
+
+app.get('/latestitemid', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    items = []
+    pool
+    .query(`SELECT item_id FROM inventory ORDER BY id DESC LIMIT 1;`)
+    .then(query_res => {
+        for (let i = 0; i < query_res.rowCount; i++){
+            items.push(query_res.rows[i]);
+        }
+        const data = {items: items};
+        console.log(items);
+        res.send(data);
+        return;
+    });
+});
+
+app.get('/latestid', (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    items = []
+    pool
+    .query(`SELECT id FROM inventory ORDER BY id DESC LIMIT 1;`)
+    .then(query_res => {
+        for (let i = 0; i < query_res.rowCount; i++){
+            items.push(query_res.rows[i]);
+        }
+        const data = {items: items};
+        console.log(items);
+        res.send(data);
+        return;
+    });
+});
 
 // app.get(, (req, res) => {
+//     res.header("Access-Control-Allow-Origin", "*");
 //     items = []
 //     pool
-//     .query(`${req.query.}`.replace(/:/g, ""))
+//     .query(
+//     '${req.query.}'.replace(/:/g, ""))
 //     .then(query_res => {
 //         for (let i = 0; i < query_res.rowCount; i++){
 //             items.push(query_res.rows[i]);
@@ -528,23 +648,6 @@ app.get('/bigboy', (req, res) => {
 //         return;
 //     });
 // });
-
-
-// app.get(, (req, res) => {
-    //     items = []
-//     pool
-//     .query()
-//     .then(query_res => {
-//         for (let i = 0; i < query_res.rowCount; i++){
-//             items.push(query_res.rows[i]);
-//         }
-//         const data = {items: items};
-//         console.log(items);
-//         res.send(data);
-//         return;
-//     });
-// });
-
  
 
 app.listen(port, () => {
