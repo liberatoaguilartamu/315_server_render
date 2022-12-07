@@ -9,6 +9,7 @@
   "author": "Team 84",
   "license": "ISC",
   "dependencies": {
+    "@google-cloud/translate": "^7.0.4",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "pg": "^8.8.0"
