@@ -63,6 +63,14 @@ updateItemItems(name, price, itemid)
 '/updateitem/:name/:price/itemid'
 "UPDATE items SET name = '%s', price = %s WHERE id = %s"
 
+// Update inventory2
+updateItemInventory2(name, itemquantity, vendor, itemid)
+"UPDATE inventory SET name = '%s', item_quantity = %s, vendor = '%s' WHERE item_id = %s"
+
+// Update items2
+updateItemItems2(name, price, category, itemid)
+"UPDATE items SET name = '%s', price = %s, category='%s' WHERE id = %s"
+
 // Add items
 addItem(itemid, name, category, price, calories)
 '/additem/:itemid/:name/:category/:price/:calories'
@@ -144,3 +152,18 @@ getItemsFromCategory(category)
 getPrices()
 '/getprice'
 "SELECT name, price FROM items"
+
+//REVISED QUERIES FOR MANAGER REPORTS
+
+getSalesReport(from, to)
+'/getsalesreport'
+
+getRestockReport(from, to)
+'/getrestockreport'
+
+getExcessReport(from, to)
+'/getexcessreport'
+
+getPairsTogether()
+'/getpairstogether'
+
